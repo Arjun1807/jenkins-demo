@@ -21,40 +21,36 @@ pipeline {
             }
         }
 
-        stage('Compile') {
+        stage('Build Application') {
             steps {
-                bat 'mvn clean compile'
+                bat 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Package Application') {
+        stage('Verify Build') {
             steps {
-                bat 'mvn package -DskipTests'
+                bat '''
+                @echo off
+                echo ===== Target Folder =====
+                dir target
+                '''
             }
         }
 
         stage('Stop Existing Application') {
-		    steps {
-		        bat '''
-		        @echo off
-		
-		        set PID=
-		
-		        for /f "tokens=5" %%a in ('netstat -ano ^| findstr :9090') do (
-		            set PID=%%a
-		        )
-		
-		        if defined PID (
-		            echo Stopping application running on port 9090...
-		            taskkill /F /PID %PID%
-		        ) else (
-		            echo No application is running on port 9090.
-		        )
-		
-		        exit /b 0
-		        '''
-		    }
-		}
+            steps {
+                bat '''
+                @echo off
+
+                for /f "tokens=5" %%a in ('netstat -ano ^| findstr :9782') do (
+                    echo Stopping process %%a
+                    taskkill /PID %%a /F
+                )
+
+                exit /b 0
+                '''
+            }
+        }
 
         stage('Deploy Application') {
             steps {
@@ -62,15 +58,22 @@ pipeline {
                 @echo off
                 echo Starting Spring Boot Application...
 
-                start "SpringBootApp" cmd /c java -jar target\\*.jar
+                for %%f in (target\\*.jar) do (
+                    echo Deploying %%f
+                    start "SpringBootApp" cmd /c java -jar "%%f"
+                    goto :started
+                )
 
-                timeout /t 10 > nul
+                echo ERROR: No JAR file found in target folder.
+                exit /b 1
+
+                :started
+                timeout /t 10
 
                 echo Application Started Successfully.
                 '''
             }
         }
-
     }
 
     post {
@@ -83,6 +86,8 @@ pipeline {
             echo 'Pipeline failed.'
         }
 
+        always {
+            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+        }
     }
-
 }
