@@ -50,8 +50,8 @@ pipeline {
 		
 		        echo Starting Spring Boot Application...
 		
-		        if exist app.log (
-		            del app.log
+		        if exist application.log (
+		            del application.log
 		        )
 		
 		        set JENKINS_NODE_COOKIE=dontKillMe
@@ -64,7 +64,7 @@ pipeline {
 		
 		        echo ===== APPLICATION LOG =====
 		
-		        type app.log
+		        type application.log
 		
 		        echo ===========================
 		
