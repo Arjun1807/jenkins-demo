@@ -53,27 +53,25 @@ pipeline {
         }
 
         stage('Deploy Application') {
-            steps {
-                bat '''
-                @echo off
-                echo Starting Spring Boot Application...
-
-                for %%f in (target\\*.jar) do (
-                    echo Deploying %%f
-                    start "SpringBootApp" cmd /c java -jar "%%f"
-                    goto :started
-                )
-
-                echo ERROR: No JAR file found in target folder.
-                exit /b 1
-
-                :started
-                timeout /t 10
-
-                echo Application Started Successfully.
-                '''
-            }
-        }
+		    steps {
+		        powershell '''
+		        $jar = Get-ChildItem target\\*.jar | Select-Object -First 1
+		
+		        if ($null -eq $jar) {
+		            Write-Error "No JAR file found."
+		            exit 1
+		        }
+		
+		        Write-Host "Starting $($jar.Name)..."
+		
+		        Start-Process java -ArgumentList "-jar `"$($jar.FullName)`"" -WindowStyle Hidden
+		
+		        Start-Sleep -Seconds 10
+		
+		        Write-Host "Application Started Successfully."
+		        '''
+		    }
+		}
     }
 
     post {
