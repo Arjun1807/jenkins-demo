@@ -54,21 +54,20 @@ pipeline {
 
         stage('Deploy Application') {
 		    steps {
-		        powershell '''
-		        $jar = Get-ChildItem target\\*.jar | Select-Object -First 1
+		        bat '''
+		        @echo off
+		        echo Starting Spring Boot Application...
 		
-		        if ($null -eq $jar) {
-		            Write-Error "No JAR file found."
-		            exit 1
-		        }
+		        :: Prevent Jenkins from terminating the application
+		        set JENKINS_NODE_COOKIE=dontKillMe
 		
-		        Write-Host "Starting $($jar.Name)..."
+		        :: Start the Spring Boot application in the background
+		        start "" javaw -jar target\\LearningGIT-0.0.1-SNAPSHOT.jar > app.log 2>&1
 		
-		        Start-Process java -ArgumentList "-jar `"$($jar.FullName)`"" -WindowStyle Hidden
+		        :: Wait for application startup
+		        ping 127.0.0.1 -n 11 > nul
 		
-		        Start-Sleep -Seconds 10
-		
-		        Write-Host "Application Started Successfully."
+		        echo Application Started Successfully.
 		        '''
 		    }
 		}
