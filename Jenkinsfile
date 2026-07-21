@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     tools {
@@ -13,27 +12,9 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Source Code') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Arjun1807/jenkins-demo.git'
-            }
-        }
-
-        stage('Build Application') {
-            steps {
-                bat 'mvn clean package -DskipTests'
-            }
-        }
-
-        stage('Verify Build') {
-            steps {
-                bat '''
-                @echo off
-                echo ===== Target Folder =====
-                dir target
-                '''
+                git branch: 'main', url: 'https://github.com/Arjun1807/jenkins-demo.git'
             }
         }
 
@@ -41,47 +22,51 @@ pipeline {
             steps {
                 bat '''
                 @echo off
-
-                for /f "tokens=5" %%a in ('netstat -ano ^| findstr :9782') do (
-                    echo Stopping process %%a
+                for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":9782 .*LISTENING"') do (
+                    echo Stopping existing application PID %%a...
                     taskkill /PID %%a /F
                 )
-
                 exit /b 0
                 '''
             }
         }
 
+        stage('Compile') {
+            steps {
+                bat 'mvn clean compile'
+            }
+        }
+
+        stage('Package Application') {
+            steps {
+                bat 'mvn package -DskipTests'
+            }
+        }
+
         stage('Deploy Application') {
-		    steps {
-		        bat '''
-		        @echo off
-		        echo Starting Spring Boot Application...
-		
-		        set JENKINS_NODE_COOKIE=dontKillMe
-		
-		        start "" java -jar target\\new-project-devops-deploy-0.0.1-SNAPSHOT.jar > app.log 2>&1
-		
-		        ping 127.0.0.1 -n 11 > nul
-		
-		        echo Application Started Successfully.
-		        '''
-		    }
-		}
+            steps {
+                bat '''
+                @echo off
+                echo Starting Spring Boot Application...
+
+                set JENKINS_NODE_COOKIE=dontKillMe
+
+                start "SpringBootApp" /B cmd /c "java -jar target\\new-project-devops-deploy-0.0.1-SNAPSHOT.jar > app.log 2>&1"
+
+                ping 127.0.0.1 -n 11 > nul
+
+                echo Application Started Successfully.
+                '''
+            }
+        }
     }
 
     post {
-
         success {
             echo 'Pipeline executed successfully.'
         }
-
         failure {
             echo 'Pipeline failed.'
-        }
-
-        always {
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
     }
 }
