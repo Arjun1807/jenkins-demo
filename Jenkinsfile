@@ -56,7 +56,7 @@ pipeline {
 		
 		        set JENKINS_NODE_COOKIE=dontKillMe
 		
-		        start "SpringBootApp" /B java -jar target\\new-project-devops-deploy-0.0.1-SNAPSHOT.jar > app.log 2>&1
+		        start "SpringBootApp" /B java -jar target\\new-project-devops-deploy-0.0.1-SNAPSHOT.jar > application.log 2>&1
 		
 		        echo Waiting for application startup...
 		
