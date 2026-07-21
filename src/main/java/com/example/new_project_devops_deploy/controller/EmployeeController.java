@@ -19,7 +19,7 @@ public class EmployeeController {
     public Employee saveEmployee(@RequestBody Employee employee){
         return service.saveEmployee(employee);
     }
-
+    //Get Mapping
     @GetMapping
     public List<Employee> getAllEmployees(){
         return service.getAllEmployees();
