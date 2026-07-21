@@ -51,7 +51,7 @@ pipeline {
 
                 set JENKINS_NODE_COOKIE=dontKillMe
                 
-		        start "SpringBootApp" /B java -jar target\\new-project-devops-deploy-0.0.1-SNAPSHOT.jar > application1.log 2>&1
+		        start "SpringBootApp" /B java -jar target\\new-project-devops-deploy-0.0.1-SNAPSHOT.jar > app.log 2>&1
 
                 ping 127.0.0.1 -n 11 > nul
 
